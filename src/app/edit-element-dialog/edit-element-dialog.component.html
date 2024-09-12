@@ -1,0 +1,27 @@
+<h1 mat-dialog-title>Edit Element</h1>
+<div mat-dialog-content>
+  <mat-form-field appearance="fill">
+    <mat-label>Position</mat-label>
+    <input matInput [(ngModel)]="element.position" type="number" />
+  </mat-form-field>
+
+  <mat-form-field appearance="fill">
+    <mat-label>Name</mat-label>
+    <input matInput [(ngModel)]="element.name" />
+  </mat-form-field>
+
+  <mat-form-field appearance="fill">
+    <mat-label>Weight</mat-label>
+    <input matInput [(ngModel)]="element.weight" type="number" />
+  </mat-form-field>
+
+  <mat-form-field appearance="fill">
+    <mat-label>Symbol</mat-label>
+    <input matInput [(ngModel)]="element.symbol" />
+  </mat-form-field>
+</div>
+
+<div mat-dialog-actions>
+  <button mat-button (click)="onCancel()">Cancel</button>
+  <button mat-button color="primary" (click)="onSave()">Save</button>
+</div>
