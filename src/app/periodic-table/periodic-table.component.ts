@@ -1,61 +1,60 @@
-import { Component, OnInit } from '@angular/core';
-import { MatTableModule } from '@angular/material/table';
 import { MatDialog } from '@angular/material/dialog';
-import { CommonModule } from '@angular/common';
-import { PeriodicElement, PeriodicElementService } from '../periodic-element.service';
+import { AppStateService } from '../app-state.service';
 import { EditElementDialogComponent } from '../edit-element-dialog/edit-element-dialog.component';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
+import { PeriodicElement } from '../periodic-element.service';
+import { Component, OnInit } from '@angular/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatButtonModule } from '@angular/material/button';
+import { MatInputModule } from '@angular/material/input';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { CommonModule } from '@angular/common';
+import { MatTableDataSource, MatTableModule } from '@angular/material/table';
 import { Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 
 @Component({
   selector: 'app-periodic-table',
   standalone: true,
-  imports: [CommonModule, MatTableModule, MatFormFieldModule, MatInputModule, MatButtonModule, MatProgressSpinnerModule],
+  imports: [
+    CommonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatProgressSpinnerModule,
+    MatTableModule
+  ],
   templateUrl: './periodic-table.component.html',
   styleUrls: ['./periodic-table.component.scss']
 })
 export class PeriodicTableComponent implements OnInit {
   displayedColumns: string[] = ['position', 'name', 'weight', 'symbol', 'actions'];
-  dataSource: PeriodicElement[] = [];
-  filteredDataSource: PeriodicElement[] = [];
-  isLoading: boolean = true;
-
+  dataSource = new MatTableDataSource<PeriodicElement>();
   private filterSubject = new Subject<string>();
-  filterValue: string = '';
 
   constructor(
-    private elementService: PeriodicElementService,
-    public dialog: MatDialog
+    public dialog: MatDialog,
+    public appStateService: AppStateService
   ) {}
 
-  ngOnInit() {
-    this.elementService.getElements().subscribe(data => {
-      this.dataSource = data;
-      this.filteredDataSource = data;
-      this.isLoading = false;
+  ngOnInit(): void {
+    this.appStateService.elements$.subscribe(elements => {
+      this.dataSource.data = elements || [];
+    });
 
-      this.filterSubject.pipe(
-        debounceTime(2000)
-      ).subscribe(filterValue => {
-        this.applyFilter(filterValue);
+    this.filterSubject
+      .pipe(debounceTime(2000))
+      .subscribe(filterValue => {
+        this.dataSource.filter = filterValue.trim().toLowerCase();
       });
+    
+    this.appStateService.filter$.subscribe(filterValue => {
+      this.filterSubject.next(filterValue);
     });
   }
 
-  applyFilter(filterValue: string): void {
-    filterValue = filterValue.trim().toLowerCase();
-    this.filteredDataSource = this.dataSource.filter(element => {
-      return (
-        element.name.toLowerCase().includes(filterValue) ||
-        element.symbol.toLowerCase().includes(filterValue) ||
-        element.weight.toString().includes(filterValue) ||
-        element.position.toString().includes(filterValue)
-      );
-    });
+  onFilterChange(event: Event): void {
+    const filterValue = (event.target as HTMLInputElement).value.trim();
+    this.appStateService.setFilter(filterValue);
   }
 
   editElement(element: PeriodicElement): void {
@@ -64,16 +63,10 @@ export class PeriodicTableComponent implements OnInit {
       data: element
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result: any) => {
       if (result) {
-        this.dataSource = this.dataSource.map(el => el.position === result.position ? result : el);
-        this.filteredDataSource = this.dataSource;
+        this.appStateService.updateElement(result);
       }
     });
-  }
-
-  onFilterChange(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    this.filterSubject.next(input.value);
   }
 }

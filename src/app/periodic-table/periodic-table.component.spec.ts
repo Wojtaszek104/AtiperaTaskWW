@@ -1,5 +1,4 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
 import { PeriodicTableComponent } from './periodic-table.component';
 
 describe('PeriodicTableComponent', () => {
