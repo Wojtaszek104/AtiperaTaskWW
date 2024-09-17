@@ -1,14 +1,14 @@
-<div *ngIf="isLoading" class="loading-spinner">
+<div *ngIf="(appStateService.isLoading$ | async)" class="loading-spinner">
   <mat-spinner></mat-spinner>
 </div>
 
-<div *ngIf="!isLoading">
+<div *ngIf="!(appStateService.isLoading$ | async)">
   <mat-form-field appearance="fill">
     <mat-label>Filter</mat-label>
     <input matInput (input)="onFilterChange($event)" />
   </mat-form-field>
 
-  <table mat-table [dataSource]="filteredDataSource" class="mat-elevation-z8">
+  <table mat-table [dataSource]="dataSource" class="mat-elevation-z8">
     <ng-container matColumnDef="position">
       <th mat-header-cell *matHeaderCellDef> No. </th>
       <td mat-cell *matCellDef="let element"> {{element.position}} </td>
